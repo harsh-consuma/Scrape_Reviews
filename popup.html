@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Review Scraper</title>
+  <style>
+    body {
+      width: 250px; /* Slightly wider for better readability */
+      font-family: sans-serif; /* More modern font */
+      background-color: #18121e; /* Violet-Black background */
+      color: #e0d6eb; /* Light text for contrast */
+      margin: 10px; /* Add some margin for the whole body */
+    }
+
+    button {
+      display: block;
+      margin-bottom: 12px; /* More spacing */
+      width: 100%; /* Full-width buttons */
+      padding: 10px 15px; /* More padding for better click area */
+      border: none;
+      border-radius: 5px; /* Rounded corners */
+      background-color: #6c4ab6; /* Violet button color */
+      color: white;
+      font-weight: bold;
+      cursor: pointer; /* Indicate interactivity */
+      transition: background-color 0.2s ease; /* Smooth hover effect */
+    }
+
+    button:hover {
+      background-color: #8a63d2; /* Lighter violet on hover */
+    }
+
+    button:disabled {
+      background-color: #4d3b6b; /* Darker violet when disabled */
+      cursor: not-allowed; /* Indicate disabled */
+    }
+
+    #status {
+      margin-bottom: 15px; /* More space below status */
+      padding: 8px;
+      border-radius: 4px;
+      background-color: #2a2236; /* Darker background for status */
+      color: #b8a9c9; /* Lighter text for status */
+      min-height: 20px;  /* Ensure it's always visible, even if empty */
+      font-size: 0.9em;   /* Slightly smaller font size */
+    }
+      h1{
+          text-align: center;
+          color: #6c4ab6
+      }
+  </style>
+</head>
+<body>
+  <h1>Review Scraper</h1>
+  <div id="status">Ready to Scrape!</div>
+  <button id="scrape">Scrape Reviews</button>
+  <button id="download" disabled>Download Reviews</button>
+  <!-- Add this button in your popup.html -->
+  <button id="scrapeAll">Scrape All Products</button>
+  <script src="popup.js"></script>
+</body>
+</html>

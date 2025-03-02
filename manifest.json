@@ -1,0 +1,47 @@
+{
+    "manifest_version": 3,
+    "name": "Scraper_Reviews",
+    "version": "1.0",
+    "description": "Scrapes product reviews from Flipkart and Amazon.",
+    "permissions": [
+      "activeTab",
+      "storage",
+      "scripting",
+      "downloads"
+    ],
+    "action": {
+      "default_popup": "popup.html",
+      "default_icon": {
+        "16": "icon16.png",
+        "48": "icon48.png",
+        "128": "icon128.png"
+      }
+    },
+    "background": {
+      "service_worker": "background.js"
+    },
+    "content_scripts": [
+      {
+        "matches": [
+          "*://*.flipkart.com/*",
+          "*://*.amazon.in/*",
+          "*://*.amazon.com/*",
+          "*://*.amazon.co.uk/*",
+          "*://*.amazon.ca/*",
+          "*://*.amazon.de/*",
+          "*://*.amazon.fr/*",
+          "*://*.amazon.es/*",
+          "*://*.amazon.it/*",
+          "*://*.amazon.co.jp/*",
+          "*://*.amazon.cn/*"
+  
+        ],
+        "js": ["content.js"]
+      }
+    ],
+      "icons": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  }
