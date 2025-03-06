@@ -141,12 +141,12 @@ function scrapeSearchResults(url) {
                 let productLinks = [];
 
                 if (url.includes('flipkart')) {
-                    productLinks = Array.from(doc.querySelectorAll('a.wjcEIp')).map(a => a.href);
+                    productLinks = Array.from(doc.querySelectorAll('a.rPDeLR')).map(a => a.href);
                     if (!productLinks || productLinks.length === 0) {
                         productLinks = Array.from(doc.querySelectorAll('a.CGtC98')).map(a => a.href);
                     }
                 } else if (url.includes('amazon.in')) {
-                    let productElements = doc.querySelectorAll('a.a-link-normal.s-line-clamp-4.s-link-style.a-text-normal');
+                    let productElements = doc.querySelectorAll('a.a-link-normal.s-line-clamp-3.s-link-style.a-text-normal');
                     if(!productElements || productElements.length === 0){
                         productElements = doc.querySelectorAll('a.a-link-normal.s-line-clamp-2.s-link-style.a-text-normal')
                     }
