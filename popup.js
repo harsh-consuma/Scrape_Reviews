@@ -25,10 +25,20 @@ document.getElementById('scrapeAll').addEventListener('click', async () => {
     }
 });
 
+let reviewsReadyForDownload = false;
+
 document.getElementById('download').addEventListener('click', () => {
     chrome.storage.local.get(["reviews"], (result) => {
         if (result.reviews && result.reviews.length > 0) {
             downloadReviews(result.reviews);
+            // Reset extension state after download
+            reviewsReadyForDownload = false;
+            chrome.storage.local.remove("reviews", () => {
+                document.getElementById('scrape').disabled = false;
+                document.getElementById('scrapeAll').disabled = false;
+                document.getElementById('download').disabled = true;
+                updateStatus("Ready to scrape new reviews.");
+            });
         } else {
             alert("No reviews to download.");
         }
@@ -82,9 +92,10 @@ function downloadReviews(reviews) {
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === "scrapingComplete") {
+        reviewsReadyForDownload = true;
         document.getElementById('download').disabled = false;
-        document.getElementById('scrape').disabled = false;
-        document.getElementById('scrapeAll').disabled = false;
+        document.getElementById('scrape').disabled = true;
+        document.getElementById('scrapeAll').disabled = true;
         updateStatus(`Scraping complete! ${message.count} reviews found.`);
     } else if (message.action === "updateStatus") {
         updateStatus(message.message);
