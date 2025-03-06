@@ -1,10 +1,26 @@
+// Add this at the start of the file, before any event listeners
+function updateButtonsBasedOnURL(url) {
+    const isSearchPage = (url.includes('flipkart.com/search?q=') || 
+                         url.includes('amazon.in/s?k='));
+    document.getElementById('scrape').disabled = isSearchPage;
+    document.getElementById('scrapeAll').disabled = !isSearchPage;
+}
+
+// When popup opens, check current URL
+chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
+    if (tab && tab.url) {
+        updateButtonsBasedOnURL(tab.url);
+    }
+});
+
 document.getElementById('scrape').addEventListener('click', async () => {
     let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-    if (tab.url.includes('flipkart.com') || tab.url.includes('amazon')) {
+    if ((tab.url.includes('flipkart.com') && !tab.url.includes('/search?q=')) || 
+        (tab.url.includes('amazon') && !tab.url.includes('/s?k='))) {
         chrome.runtime.sendMessage({ action: "startScraping", tabId: tab.id, url: tab.url });
         document.getElementById('scrape').disabled = true;
-        document.getElementById('scrapeAll').disabled=true;
+        document.getElementById('scrapeAll').disabled = true;
         updateStatus("Scraping started... Please Don't click anywhere, it will take around 15 Seconds");
     } else {
         alert('Please navigate to a Flipkart or Amazon product page.');
