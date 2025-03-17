@@ -18,7 +18,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             }
             if (match && match[1]) {
                 const asin = match[1];
-                reviewsUrl = `https://www.amazon.in/product-reviews/${asin}/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews&pageNumber=1`; // Directly construct the URL
+                // Create two URLs - default and sorted by recent
+                const defaultUrl = `https://www.amazon.in/product-reviews/${asin}/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews&pageNumber=1`;
+                const recentUrl = `https://www.amazon.in/product-reviews/${asin}/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews&sortBy=recent&pageNumber=1`;
+                
+                // Start scraping with both URLs
+                scrapeAmazonReviews(defaultUrl, recentUrl, message.tabId);
+                return;
             }
             else {
                 chrome.runtime.sendMessage({ action: "updateStatus", message: "Invalid Amazon URL" });
@@ -31,6 +37,41 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         scrapeAllProducts(message.url, message.tabId);
     }
 });
+
+async function scrapeAmazonReviews(defaultUrl, recentUrl, tabId) {
+    let defaultReviews = [];
+    let recentReviews = [];
+
+    // Scrape both URLs
+    await new Promise(resolve => scrapePage(defaultUrl, tabId, defaultReviews, (reviews) => {
+        defaultReviews = reviews;
+        resolve();
+    }));
+
+    await new Promise(resolve => scrapePage(recentUrl, tabId, recentReviews, (reviews) => {
+        recentReviews = reviews;
+        resolve();
+    }));
+
+    // Combine and remove duplicates
+    const allReviews = removeDuplicateReviews([...defaultReviews, ...recentReviews]);
+
+    // Save the combined unique reviews
+    chrome.storage.local.set({ reviews: allReviews }, () => {
+        chrome.runtime.sendMessage({ action: "scrapingComplete", count: allReviews.length });
+    });
+}
+
+function removeDuplicateReviews(reviews) {
+    const seen = new Set();
+    return reviews.filter(review => {
+        // Create a unique key using review text and date
+        const key = `${review.text}-${review.posting_date}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
+}
 
 async function scrapeAllProducts(searchUrl, tabId) {
     chrome.scripting.executeScript({
@@ -53,7 +94,7 @@ async function scrapeAllProducts(searchUrl, tabId) {
         let allReviews = [];
         let completed = 0;
 
-        productUrls.forEach(productUrl => {
+        productUrls.forEach(async productUrl => {
             let reviewsUrl;
             if (searchUrl.includes('flipkart')) {
                 reviewsUrl = productUrl.replace('/p/', '/product-reviews/') + "&page=1";
@@ -61,7 +102,26 @@ async function scrapeAllProducts(searchUrl, tabId) {
                 let asinMatch = productUrl.match(/\/dp\/([A-Z0-9]+)/);
                 if (asinMatch && asinMatch[1]) {
                     const asin = asinMatch[1];
-                    reviewsUrl = `https://www.amazon.in/product-reviews/${asin}/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews&pageNumber=1`;
+                    const defaultUrl = `https://www.amazon.in/product-reviews/${asin}/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews&pageNumber=1`;
+                    const recentUrl = `https://www.amazon.in/product-reviews/${asin}/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews&sortBy=recent&pageNumber=1`;
+                    
+                    // Handle both URLs for each product
+                    let productReviews = [];
+                    await new Promise(resolve => scrapePage(defaultUrl, tabId, productReviews, (reviews) => {
+                        productReviews = reviews;
+                        resolve();
+                    }));
+                    await new Promise(resolve => scrapePage(recentUrl, tabId, productReviews, (reviews) => {
+                        productReviews = removeDuplicateReviews([...productReviews, ...reviews]);
+                        resolve();
+                    }));
+                    allReviews = allReviews.concat(productReviews);
+                    completed++;
+                    if (completed === productUrls.length) {
+                        chrome.storage.local.set({ reviews: allReviews }, () => {
+                            chrome.runtime.sendMessage({ action: "scrapingComplete", count: allReviews.length });
+                        });
+                    }
                 }
             }
 
